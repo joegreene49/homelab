@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitea
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      containers:
+      - name: gitea
+        image: gitea/gitea:latest
+        ports:
+        - containerPort: 3000
+        - containerPort: 22
+        env:
+        - name: GITEA__database__DB_TYPE
+          value: sqlite3
+        - name: GITEA__database__PATH
+          value: /data/gitea/gitea.db
+        volumeMounts:
+        - name: gitea-data
+          mountPath: /data
+      volumes:
+      - name: gitea-data
+        hostPath:
+          path: /home/jgreene/gitea
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: gitea
+  ports:
+  - name: web
+    port: 3000
+    targetPort: 3000
+    nodePort: 30400
+  - name: ssh
+    port: 22
+    targetPort: 22
+    nodePort: 30022
