@@ -1,0 +1,45 @@
+---
+- name: Homelab Setup Playbook
+  hosts: localhost
+  become: yes
+
+  tasks:
+    - name: Ensure firewall ports are open for homelab services
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+      loop:
+        - 30096/tcp
+        - 30300/tcp
+        - 30090/tcp
+        - 30080/tcp
+        - 30400/tcp
+        - 30301/tcp
+
+    - name: Reload firewalld
+      service:
+        name: firewalld
+        state: reloaded
+
+    - name: Ensure k3s is running
+      service:
+        name: k3s
+        state: started
+        enabled: yes
+
+    - name: Ensure required directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: jgreene
+        group: jgreene
+        mode: '0755'
+      loop:
+        - /home/jgreene/jellyfin/config
+        - /home/jgreene/jellyfin/media
+        - /home/jgreene/prometheus
+        - /home/jgreene/grafana
+        - /home/jgreene/gitea
+        - /home/jgreene/pihole/etc-pihole
+        - /home/jgreene/pihole/etc-dnsmasq.d
